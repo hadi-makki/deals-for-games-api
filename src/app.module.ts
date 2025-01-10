@@ -9,16 +9,26 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { TokenModule } from './token/token.module';
 import { loggerMiddleware } from './logger/logger.service';
+import { FaqModule } from './faq/faq.module';
+import { GamesModule } from './games/games.module';
+import { CardsModule } from './cards/cards.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { TutorialsModule } from './tutorials/tutorials.module';
 
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,
-    MediaModule,
-    S3Module,
+    // MediaModule,
+    // S3Module,
     UserModule,
     AuthModule,
     TokenModule,
+    FaqModule,
+    GamesModule,
+    CardsModule,
+    SubscriptionsModule,
+    TutorialsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
