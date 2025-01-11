@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'deals-for-games-api',
-      script: './dist/main.js',
+      script: './dist/src/main.js',
       cwd: '/home/ubuntu/saleasy-api',
       watch: true,
       env: {
