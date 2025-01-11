@@ -19,8 +19,8 @@ import { TutorialsModule } from './tutorials/tutorials.module';
   imports: [
     ConfigModule,
     DatabaseModule,
-    // MediaModule,
-    // S3Module,
+    MediaModule,
+    S3Module,
     UserModule,
     AuthModule,
     TokenModule,
