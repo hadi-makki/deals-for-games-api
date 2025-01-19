@@ -23,7 +23,10 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new BadRequestException('Wrong Email or Password');
     }
-    const generateTokens = await this.tokenService.generateTokens(getUser.id);
+    const generateTokens = await this.tokenService.generateTokens({
+      userId: getUser.id,
+      managerId: null,
+    });
     return { ...returnUser(getUser), token: generateTokens.accessToken };
   }
 
@@ -42,7 +45,10 @@ export class AuthService {
       name,
       password: hashPass,
     });
-    const generateTokens = await this.tokenService.generateTokens(newUser.id);
+    const generateTokens = await this.tokenService.generateTokens({
+      userId: newUser.id,
+      managerId: null,
+    });
     return { ...returnUser(newUser), token: generateTokens.accessToken };
   }
 

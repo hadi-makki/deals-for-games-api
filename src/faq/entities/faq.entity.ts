@@ -2,7 +2,7 @@ import { MainEntity } from 'src/main-classes/mainEntity';
 import { Column, Entity } from 'typeorm';
 
 @Entity('faq')
-export class Faq extends MainEntity {
+export class FaqEntity extends MainEntity {
   @Column('text')
   question: string;
   @Column('text')

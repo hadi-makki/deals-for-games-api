@@ -5,6 +5,9 @@ export class GenerateTokenDTO {
   userId: string;
 
   @IsString()
+  managerId: string;
+
+  @IsString()
   accessToken: string;
 
   @IsString()

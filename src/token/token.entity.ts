@@ -1,6 +1,7 @@
 import { MainEntity } from 'src/main-classes/mainEntity';
+import { ManagerEntity } from 'src/manager/manager.entity';
 import { UserEntity } from 'src/user/user.entity';
-import { Column, Entity, OneToOne, Unique } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToOne, Unique } from 'typeorm';
 
 export enum TokenType {
   Access = 'access',
@@ -23,6 +24,9 @@ class TokenEntity extends MainEntity {
 
   @OneToOne(() => UserEntity, (user) => user.token)
   user: UserEntity;
+
+  @OneToOne(() => ManagerEntity, (manager) => manager.token)
+  manager: ManagerEntity;
 }
 
 export default TokenEntity;

@@ -1,37 +1,32 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Reflector } from '@nestjs/core';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
+import { CanActivate } from '@nestjs/common/interfaces/features/can-activate.interface';
+import { ExecutionContext } from '@nestjs/common/interfaces/features/execution-context.interface';
 import { UserEntity } from 'src/user/user.entity';
-import { TokenService } from 'src/token/token.service';
+import { ManagerEntity } from 'src/manager/manager.entity';
+import { UnauthorizedException } from 'src/error/unauthorized-error';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     @InjectRepository(UserEntity)
     private usersRepository: Repository<UserEntity>,
-    private jwtService: JwtService,
-    private configService: ConfigService,
-    private tokenService: TokenService,
-    private readonly reflector: Reflector,
+    @InjectRepository(ManagerEntity)
+    private managerRepository: Repository<ManagerEntity>,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const response = context.switchToHttp().getResponse();
-    const token = await this.tokenService.validateJwt(request, response);
+    const userId = request.headers['auth_user'];
 
-    const user = await this.usersRepository.findOne({
-      where: { id: token.sub },
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    const manager = await this.managerRepository.findOneBy({
+      id: userId,
     });
-    if (!user) {
-      throw new UnauthorizedException('Unauthorized');
+    if (!user && !manager) {
+      throw new UnauthorizedException(
+        'Unauthorized, user not found in users microservice',
+      );
     }
 
     request.user = user;

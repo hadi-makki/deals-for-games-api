@@ -8,9 +8,10 @@ import { UserService } from 'src/user/user.service';
 import TokenEntity from 'src/token/token.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ManagerEntity } from 'src/manager/manager.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, TokenEntity])],
+  imports: [TypeOrmModule.forFeature([UserEntity, TokenEntity, ManagerEntity])],
   controllers: [AuthController],
   providers: [
     AuthService,

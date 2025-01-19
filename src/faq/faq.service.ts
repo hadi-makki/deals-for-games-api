@@ -1,26 +1,84 @@
 import { Injectable } from '@nestjs/common';
-import { CreateFaqDto } from './dto/create-faq.dto';
-import { UpdateFaqDto } from './dto/update-faq.dto';
+import { CreateFaqDto } from './dto/request/create-faq.dto';
+import { FaqEntity } from './entities/faq.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CreatedFaqDto } from './dto/response/created-faq.dto';
+import { ForbiddenException } from 'src/error/forbidden-error';
+import { SuccessMessageReturn } from 'src/main-classes/success-message-return';
+import { NotFoundException } from 'src/error/not-found-error';
 
 @Injectable()
 export class FaqService {
-  create(createFaqDto: CreateFaqDto) {
-    return 'This action adds a new faq';
+  constructor(
+    @InjectRepository(FaqEntity)
+    private readonly faqRepository: Repository<FaqEntity>,
+  ) {}
+  async create(createFaqDto: CreateFaqDto): Promise<CreatedFaqDto> {
+    const checkFaq = await this.faqRepository.findOne({
+      where: {
+        question: createFaqDto.question,
+      },
+    });
+    if (checkFaq) {
+      throw new ForbiddenException('Faq already exists');
+    }
+    const saveFaq = await this.faqRepository.save(createFaqDto);
+    return saveFaq;
   }
 
-  findAll() {
-    return `This action returns all faq`;
+  async findAll(): Promise<CreatedFaqDto[]> {
+    return await this.faqRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} faq`;
+  async findOne(id: string): Promise<CreatedFaqDto> {
+    const getFaq = await this.faqRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!getFaq) {
+      throw new NotFoundException('Faq not found');
+    }
+
+    return getFaq;
   }
 
-  update(id: number, updateFaqDto: UpdateFaqDto) {
-    return `This action updates a #${id} faq`;
+  async update(id: string, updateFaqDto: CreateFaqDto): Promise<CreatedFaqDto> {
+    const faq = await this.faqRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!faq) {
+      throw new NotFoundException('Faq not found');
+    }
+
+    faq.question = updateFaqDto.question;
+    faq.answer = updateFaqDto.answer;
+
+    await this.faqRepository.save(faq);
+
+    return faq;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} faq`;
+  async remove(id: string): Promise<SuccessMessageReturn> {
+    const faq = await this.faqRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!faq) {
+      throw new NotFoundException('Faq not found');
+    }
+
+    await this.faqRepository.remove(faq);
+
+    return {
+      message: 'Faq deleted successfully',
+    };
   }
 }

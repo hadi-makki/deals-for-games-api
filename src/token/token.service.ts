@@ -11,6 +11,7 @@ import { NotFoundException } from 'src/error/not-found-error';
 import { UserEntity } from 'src/user/user.entity';
 import { NextFunction, Request, Response } from 'express';
 import { UnauthorizedException } from 'src/error/unauthorized-error';
+import { ManagerEntity } from 'src/manager/manager.entity';
 
 @Injectable()
 export class TokenService {
@@ -22,8 +23,16 @@ export class TokenService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     // private readonly TokenService: TokenService,
+    @InjectRepository(ManagerEntity)
+    private readonly managerRepository: Repository<ManagerEntity>,
   ) {}
-  async generateTokens(userId: string): Promise<{
+  async generateTokens({
+    userId,
+    managerId,
+  }: {
+    userId: string;
+    managerId?: string;
+  }): Promise<{
     accessToken: string;
     refreshToken: string;
     refreshExpirationDate: Date;
@@ -39,7 +48,7 @@ export class TokenService {
     const accessExpirationDate = addDays(new Date(), accessExpirationDays);
     const accessToken = await this.jwtService.signAsync(
       {
-        sub: userId,
+        sub: userId || managerId,
       },
       {
         secret: this.configService.get('JWT_ACCESS_SECRET'),
@@ -49,7 +58,7 @@ export class TokenService {
 
     const refreshToken = await this.jwtService.signAsync(
       {
-        sub: userId,
+        sub: userId || managerId,
       },
       {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
@@ -59,6 +68,7 @@ export class TokenService {
 
     await this.storeToken({
       userId,
+      managerId,
       accessToken,
       refreshToken,
       accessExpirationDate,
@@ -72,36 +82,60 @@ export class TokenService {
     };
   }
   async storeToken(data: GenerateTokenDTO): Promise<TokenEntity> {
+    console.log('data', data);
     const checkToken = await this.tokenRepository.findOne({
-      where: {
-        user: {
-          id: data.userId,
+      where: [
+        {
+          user: {
+            id: data?.userId,
+          },
         },
-      },
+        {
+          manager: {
+            id: data?.managerId,
+          },
+        },
+      ],
+      relations: ['user', 'manager'],
     });
-    const getUser = await this.userRepository.findOne({
-      where: {
-        id: data.userId,
-      },
-    });
+
+    console.log('check token', checkToken);
 
     if (checkToken) {
       checkToken.refreshToken = data.refreshToken;
       checkToken.refreshExpirationDate = data.refreshExpirationDate;
       checkToken.accessToken = data.accessToken;
       checkToken.accessExpirationDate = data.accessExpirationDate;
-      checkToken.user = getUser;
-      getUser.token = checkToken;
-      await this.userRepository.save(getUser);
+      if (data.userId && data.userId !== checkToken.user.id) {
+        const user = await this.userRepository.findOne({
+          where: {
+            id: data.userId,
+          },
+        });
+        checkToken.user = user;
+      }
+      if (data.managerId && data.managerId !== checkToken.manager.id) {
+        const manager = await this.managerRepository.findOne({
+          where: {
+            id: data.managerId,
+          },
+        });
+        checkToken.manager = manager;
+      }
       return this.tokenRepository.save(checkToken);
     } else {
-      const saveToken = await this.tokenRepository.save({
+      const tokenData = {
         ...data,
-        user: getUser,
-      });
-      getUser.token = saveToken;
-      await this.userRepository.save(getUser);
-      return saveToken;
+        ...(data.userId
+          ? {
+              user: {
+                id: data?.userId,
+              },
+            }
+          : {}),
+        ...(data.managerId ? { manager: { id: data?.managerId } } : {}),
+      };
+      return this.tokenRepository.save(tokenData);
     }
   }
 
