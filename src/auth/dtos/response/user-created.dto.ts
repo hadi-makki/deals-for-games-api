@@ -9,16 +9,7 @@ export class UserCreatedDto extends MainDto {
   email: string;
 
   @ApiProperty()
-  id: string;
-
-  @ApiProperty()
   createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty()
-  isDeactivated: boolean;
 
   @ApiProperty()
   token: string;

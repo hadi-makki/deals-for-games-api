@@ -1,5 +1,10 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dtos/request/login.dto';
 import { RegisterDto } from './dtos/request/register.dto';
@@ -11,6 +16,7 @@ import {
 import { AuthGuard } from 'src/guards/auth.guard';
 import { User } from 'src/decorators/users.decorator';
 import { UserEntity } from 'src/user/user.entity';
+import { UserCreatedDto } from './dtos/response/user-created.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -24,6 +30,10 @@ export class AuthController {
   @ApiBody({
     type: RegisterDto,
   })
+  @ApiCreatedResponse({
+    description: 'User created',
+    type: UserCreatedDto,
+  })
   async register(@Body() registerDto: RegisterDto) {
     return this.AuthService.register(registerDto);
   }
@@ -31,6 +41,10 @@ export class AuthController {
   @Post('login')
   @ApiBody({
     type: LoginDto,
+  })
+  @ApiCreatedResponse({
+    description: 'User logged in',
+    type: UserCreatedDto,
   })
   async login(@Body() loginDto: LoginDto) {
     return await this.AuthService.login(loginDto);
