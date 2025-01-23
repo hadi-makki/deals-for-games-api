@@ -27,10 +27,4 @@ export class CreateManagerDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  @IsUUID('4')
-  managertype: string;
 }
