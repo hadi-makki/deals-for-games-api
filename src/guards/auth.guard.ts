@@ -6,6 +6,7 @@ import { ExecutionContext } from '@nestjs/common/interfaces/features/execution-c
 import { UserEntity } from 'src/user/user.entity';
 import { ManagerEntity } from 'src/manager/manager.entity';
 import { UnauthorizedException } from 'src/error/unauthorized-error';
+import { TokenService } from 'src/token/token.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -14,23 +15,38 @@ export class AuthGuard implements CanActivate {
     private usersRepository: Repository<UserEntity>,
     @InjectRepository(ManagerEntity)
     private managerRepository: Repository<ManagerEntity>,
+    private tokenService: TokenService,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const userId = request.headers['auth_user'];
+
+    const validatedData = await this.tokenService.validateJwt(
+      context.switchToHttp().getRequest(),
+      context.switchToHttp().getResponse(),
+    );
+
+    const userId = validatedData?.sub;
+
+    if (!userId) {
+      throw new UnauthorizedException('Unauthorized');
+    }
 
     const user = await this.usersRepository.findOneBy({ id: userId });
+
+    if (user) {
+      request.user = user;
+      return true;
+    }
+
     const manager = await this.managerRepository.findOneBy({
       id: userId,
     });
-    if (!user && !manager) {
-      throw new UnauthorizedException(
-        'Unauthorized, user not found in users microservice',
-      );
+
+    if (manager) {
+      request.user = manager;
+      return true;
     }
 
-    request.user = user;
-
-    return true;
+    throw new UnauthorizedException('Unauthorized');
   }
 }
